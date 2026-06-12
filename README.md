@@ -15,26 +15,7 @@ Automated deployment of a 3-node Elasticsearch 8.x cluster on AWS Free Tier usin
 
 ## Architecture Overview
 
-```
-                        Your Machine
-                            │
-                     SSH / HTTPS:9200
-                            │
-              ┌─────────────┼─────────────┐
-              │             │             │
-         ┌────▼────┐   ┌────▼────┐   ┌────▼────┐
-         │ es-node-1│   │ es-node-2│   │ es-node-3│
-         │t2.micro │   │ t2.micro│   │ t2.micro│
-         │ :9200   │   │  :9200  │   │  :9200  │
-         └────┬────┘   └────┬────┘   └────┬────┘
-              └─────────────┼─────────────┘
-                     Transport :9300
-                    (VPC-internal only)
-         ─────────────────────────────────────
-                    AWS VPC 10.0.0.0/16
-         ─────────────────────────────────────
-         Subnet-1 (AZ-a) │ Subnet-2 (AZ-b) │ Subnet-3 (AZ-c)
-```
+![alt text](screenshot/architecture.png)
 
 Design decisions:
 - Each node is in a separate Availability Zone so the cluster survives a single AZ failure
