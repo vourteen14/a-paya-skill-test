@@ -1,0 +1,12 @@
+---
+- name: Install Elasticsearch
+  import_tasks: install.yml
+
+- name: Apply configuration
+  import_tasks: configure.yml
+
+- name: Configure TLS
+  import_tasks: tls.yml
+
+- name: Start service
+  import_tasks: service.yml

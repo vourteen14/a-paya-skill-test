@@ -1,0 +1,12 @@
+---
+- name: Configure authentication
+  hosts: all
+  become: true
+  gather_facts: false
+  vars:
+    is_first_node: true
+  tasks:
+    - name: Set user credentials
+      import_role:
+        name: elasticsearch
+        tasks_from: security

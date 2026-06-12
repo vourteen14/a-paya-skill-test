@@ -1,0 +1,89 @@
+---
+- name: Create certificates directory
+  file:
+    path: "{{ certificates_path }}"
+    state: directory
+    owner: root
+    group: elasticsearch
+    mode: "0750"
+
+- name: Generate certificate authority
+  command: >
+    {{ elasticsearch_home }}/bin/elasticsearch-certutil ca
+    --out {{ certificates_path }}/ca.p12
+    --pass ""
+    --days {{ cert_validity_days }}
+  args:
+    creates: "{{ certificates_path }}/ca.p12"
+  when: is_first_node | bool
+
+- name: Issue primary node certificate
+  command: >
+    {{ elasticsearch_home }}/bin/elasticsearch-certutil cert
+    --ca {{ certificates_path }}/ca.p12
+    --ca-pass ""
+    --out {{ certificates_path }}/node.p12
+    --pass ""
+    --days {{ cert_validity_days }}
+    --name {{ node_name }}
+    --dns {{ node_name }},localhost
+    --ip {{ ansible_host }},{{ private_ip }},127.0.0.1
+  args:
+    creates: "{{ certificates_path }}/node.p12"
+  when: is_first_node | bool
+
+- name: Fetch certificate authority to controller
+  fetch:
+    src: "{{ certificates_path }}/ca.p12"
+    dest: "/tmp/elasticsearch-certs/ca.p12"
+    flat: yes
+  when: is_first_node | bool
+
+- name: Distribute certificate authority to node
+  copy:
+    src: "/tmp/elasticsearch-certs/ca.p12"
+    dest: "{{ certificates_path }}/ca.p12"
+    owner: root
+    group: elasticsearch
+    mode: "0640"
+  when: not (is_first_node | bool)
+
+- name: Issue node certificate
+  command: >
+    {{ elasticsearch_home }}/bin/elasticsearch-certutil cert
+    --ca {{ certificates_path }}/ca.p12
+    --ca-pass ""
+    --out {{ certificates_path }}/node.p12
+    --pass ""
+    --days {{ cert_validity_days }}
+    --name {{ node_name }}
+    --dns {{ node_name }},localhost
+    --ip {{ ansible_host }},{{ private_ip }},127.0.0.1
+  args:
+    creates: "{{ certificates_path }}/node.p12"
+  when: not (is_first_node | bool)
+
+- name: Initialize keystore
+  command: "{{ elasticsearch_home }}/bin/elasticsearch-keystore create"
+  args:
+    creates: "{{ elasticsearch_config }}/elasticsearch.keystore"
+
+- name: Register certificate credentials
+  shell: |
+    echo "" | {{ elasticsearch_home }}/bin/elasticsearch-keystore add -xf {{ item }}
+  loop:
+    - xpack.security.transport.ssl.keystore.secure_password
+    - xpack.security.transport.ssl.truststore.secure_password
+    - xpack.security.http.ssl.keystore.secure_password
+    - xpack.security.http.ssl.truststore.secure_password
+  changed_when: false
+
+- name: Set certificate permissions
+  file:
+    path: "{{ item }}"
+    owner: root
+    group: elasticsearch
+    mode: "0640"
+  loop:
+    - "{{ certificates_path }}/node.p12"
+    - "{{ certificates_path }}/ca.p12"

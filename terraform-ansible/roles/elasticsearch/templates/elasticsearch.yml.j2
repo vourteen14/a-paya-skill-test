@@ -1,0 +1,34 @@
+cluster.name: {{ cluster_name }}
+
+cluster.initial_master_nodes:
+{% for name in initial_masters | from_json %}
+  - {{ name }}
+{% endfor %}
+
+node.name: {{ node_name }}
+node.roles: {{ node_roles | to_json }}
+
+network.host: ["{{ private_ip }}", "127.0.0.1"]
+network.publish_host: "{{ private_ip }}"
+
+http.port: 9200
+transport.port: 9300
+
+discovery.seed_hosts:
+{% for ip in seed_hosts | from_json %}
+  - {{ ip }}:9300
+{% endfor %}
+
+path.data: {{ elasticsearch_data }}
+path.logs: {{ elasticsearch_logs }}
+
+xpack.security.enabled: true
+
+xpack.security.transport.ssl.enabled: true
+xpack.security.transport.ssl.verification_mode: certificate
+xpack.security.transport.ssl.keystore.path: {{ certificates_path }}/node.p12
+xpack.security.transport.ssl.truststore.path: {{ certificates_path }}/node.p12
+
+xpack.security.http.ssl.enabled: true
+xpack.security.http.ssl.keystore.path: {{ certificates_path }}/node.p12
+xpack.security.http.ssl.truststore.path: {{ certificates_path }}/node.p12

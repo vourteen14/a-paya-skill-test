@@ -1,0 +1,10 @@
+---
+- name: Write Elasticsearch configuration
+  template:
+    src: elasticsearch.yml.j2
+    dest: "{{ elasticsearch_config }}/elasticsearch.yml"
+    owner: root
+    group: elasticsearch
+    mode: "0660"
+    backup: yes
+  notify: restart elasticsearch

@@ -1,0 +1,62 @@
+---
+- name: Check swap status
+  command: swapon --show
+  register: swap_status
+  changed_when: false
+
+- name: Create swap file
+  command: dd if=/dev/zero of=/swapfile bs=128M count=16
+  when: swap_status.stdout == ""
+
+- name: Set swap file permissions
+  file:
+    path: /swapfile
+    mode: "0600"
+  when: swap_status.stdout == ""
+
+- name: Format swap file
+  command: mkswap /swapfile
+  when: swap_status.stdout == ""
+
+- name: Enable swap
+  command: swapon /swapfile
+  when: swap_status.stdout == ""
+
+- name: Persist swap on reboot
+  lineinfile:
+    path: /etc/fstab
+    line: "/swapfile swap swap defaults 0 0"
+    state: present
+
+- name: Add Elasticsearch signing key
+  rpm_key:
+    state: present
+    key: "https://artifacts.elastic.co/GPG-KEY-elasticsearch"
+
+- name: Register Elasticsearch repository
+  yum_repository:
+    name: elasticsearch
+    description: "Elasticsearch {{ elasticsearch_version }}"
+    baseurl: "https://artifacts.elastic.co/packages/8.x/yum"
+    gpgcheck: yes
+    gpgkey: "https://artifacts.elastic.co/GPG-KEY-elasticsearch"
+    enabled: yes
+
+- name: Install Elasticsearch
+  yum:
+    name: "elasticsearch-{{ elasticsearch_version }}"
+    state: present
+
+- name: Install Java runtime
+  yum:
+    name: java-11-amazon-corretto-headless
+    state: present
+
+- name: Configure JVM heap
+  template:
+    src: jvm.options.j2
+    dest: "{{ elasticsearch_config }}/jvm.options.d/heap.options"
+    owner: root
+    group: elasticsearch
+    mode: "0640"
+  notify: restart elasticsearch

@@ -1,0 +1,15 @@
+---
+elasticsearch_version: "8.13.4"
+cluster_name: "elasticsearch"
+node_roles:
+  - master
+  - data
+elastic_password: "Ch4ng3Me_Str0ng!"
+kibana_password: "K1ban4_Str0ng!"
+cert_validity_days: 365
+heap_size: "512m"
+elasticsearch_home: "/usr/share/elasticsearch"
+elasticsearch_config: "/etc/elasticsearch"
+elasticsearch_data: "/var/lib/elasticsearch"
+elasticsearch_logs: "/var/log/elasticsearch"
+certificates_path: "/etc/elasticsearch/certs"

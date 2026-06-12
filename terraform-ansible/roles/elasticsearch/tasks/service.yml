@@ -1,0 +1,26 @@
+---
+- name: Reload systemd
+  systemd:
+    daemon_reload: yes
+
+- name: Start Elasticsearch service
+  systemd:
+    name: elasticsearch
+    state: started
+    enabled: yes
+
+- name: Wait for primary node to accept connections
+  wait_for:
+    host: 127.0.0.1
+    port: 9200
+    delay: 10
+    timeout: 180
+  when: is_first_node | bool
+
+- name: Wait for node to join cluster
+  wait_for:
+    host: 127.0.0.1
+    port: 9200
+    delay: 10
+    timeout: 180
+  when: not (is_first_node | bool)

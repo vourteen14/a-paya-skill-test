@@ -1,0 +1,56 @@
+---
+- name: Reset elastic user password
+  command: >
+    {{ elasticsearch_home }}/bin/elasticsearch-reset-password
+    -u elastic
+    --batch
+    --url https://localhost:9200
+  environment:
+    ES_PATH_CONF: "{{ elasticsearch_config }}"
+  register: password_reset
+  changed_when: true
+
+- name: Extract generated password
+  set_fact:
+    generated_password: "{{ password_reset.stdout | regex_search('New value: (.+)', '\\1') | first }}"
+
+- name: Set elastic user password
+  uri:
+    url: "https://localhost:9200/_security/user/elastic/_password"
+    method: POST
+    user: elastic
+    password: "{{ generated_password }}"
+    force_basic_auth: yes
+    validate_certs: no
+    body_format: json
+    body:
+      password: "{{ elastic_password }}"
+    status_code: 200
+
+- name: Set kibana system user password
+  uri:
+    url: "https://localhost:9200/_security/user/kibana_system/_password"
+    method: POST
+    user: elastic
+    password: "{{ elastic_password }}"
+    force_basic_auth: yes
+    validate_certs: no
+    body_format: json
+    body:
+      password: "{{ kibana_password }}"
+    status_code: 200
+
+- name: Verify authentication
+  uri:
+    url: "https://localhost:9200/_security/_authenticate"
+    method: GET
+    user: elastic
+    password: "{{ elastic_password }}"
+    force_basic_auth: yes
+    validate_certs: no
+    status_code: 200
+  register: auth_result
+
+- name: Confirm authentication succeeded
+  debug:
+    msg: "Authenticated as {{ auth_result.json.username }}"

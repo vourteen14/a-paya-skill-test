@@ -1,0 +1,35 @@
+---
+- name: Validate cluster
+  hosts: all
+  become: true
+  gather_facts: true
+  vars:
+    is_first_node: true
+  tasks:
+    - name: Run health checks
+      import_role:
+        name: elasticsearch
+        tasks_from: verify
+
+    - name: Wait for full cluster formation
+      uri:
+        url: "https://{{ private_ip }}:9200/_cluster/health?wait_for_nodes={{ cluster_size }}&timeout=180s"
+        method: GET
+        user: elastic
+        password: "{{ elastic_password }}"
+        force_basic_auth: yes
+        validate_certs: no
+        status_code: 200
+        return_content: yes
+      register: cluster_status
+      until: cluster_status.json.number_of_nodes == cluster_size | int
+      retries: 18
+      delay: 10
+
+    - name: Display cluster status
+      debug:
+        msg: |
+          Cluster: {{ cluster_status.json.cluster_name }}
+          Status:  {{ cluster_status.json.status }}
+          Nodes:   {{ cluster_status.json.number_of_nodes }}/{{ cluster_size }}
+          Shards:  {{ cluster_status.json.active_shards }} active

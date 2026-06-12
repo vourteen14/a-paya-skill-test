@@ -1,0 +1,61 @@
+---
+- name: Check cluster health
+  uri:
+    url: "https://127.0.0.1:9200/_cluster/health?pretty"
+    method: GET
+    user: elastic
+    password: "{{ elastic_password }}"
+    force_basic_auth: yes
+    validate_certs: no
+    return_content: yes
+    status_code: 200
+  register: cluster_health
+
+- name: Display node status
+  debug:
+    msg: |
+      Node:   {{ node_name }} ({{ ansible_host }})
+      Status: {{ cluster_health.json.status }}
+      Nodes:  {{ cluster_health.json.number_of_nodes }}
+
+- name: Verify authentication is enforced
+  uri:
+    url: "https://127.0.0.1:9200/"
+    method: GET
+    validate_certs: no
+    status_code: 401
+  when: is_first_node | bool
+
+- name: Index test document
+  uri:
+    url: "https://127.0.0.1:9200/smoke-test/_doc/1"
+    method: PUT
+    user: elastic
+    password: "{{ elastic_password }}"
+    force_basic_auth: yes
+    validate_certs: no
+    body_format: json
+    body:
+      message: "Deployment verified"
+      node: "{{ node_name }}"
+      timestamp: "{{ ansible_date_time.iso8601 }}"
+    status_code: [200, 201]
+  when: is_first_node | bool
+
+- name: Retrieve test document
+  uri:
+    url: "https://127.0.0.1:9200/smoke-test/_doc/1"
+    method: GET
+    user: elastic
+    password: "{{ elastic_password }}"
+    force_basic_auth: yes
+    validate_certs: no
+    status_code: 200
+    return_content: yes
+  register: document
+  when: is_first_node | bool
+
+- name: Confirm document retrieval
+  debug:
+    msg: "Document verified: {{ document.json._source }}"
+  when: is_first_node | bool

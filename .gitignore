@@ -1,0 +1,18 @@
+# Terraform
+.terraform/
+.terraform.lock.hcl
+terraform.tfstate
+terraform.tfstate.backup
+*.tfvars
+!example.tfvars
+
+# SSH Keys — NEVER commit private keys
+ansible/es_key.pem
+/tmp/es-certs/
+
+# Ansible generated files
+ansible/inventory/hosts.ini
+
+# OS
+.DS_Store
+*.swp
