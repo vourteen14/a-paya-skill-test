@@ -10,7 +10,7 @@
 | 2a | Description of solution and choices | Done | README "Answers to Exercise Questions" |
 | 2b | Resources consulted | Done | README "Resources Consulted" section |
 | 2c | Time spent + feedback | Done | README "Time Spent & Feedback" section |
-| 3 | Must use AWS free tier | Done | t2.micro, 20GB EBS, public subnets (no NAT) |
+| 3 | Must use AWS free tier | Done | t2.micro, 30GB EBS, public subnets (no NAT) |
 | 4 | Elasticsearch access and communication must be secure | Done | SG + TLS + auth + EBS encryption |
 | BONUS | Cluster of 3 Elasticsearch nodes | Done | `cluster_size = 3`, multi-AZ, mutual TLS |
 
