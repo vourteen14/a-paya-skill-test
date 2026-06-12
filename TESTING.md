@@ -16,27 +16,6 @@
 
 All 7 exercise questions answered in README.
 
-## Known Issues / Discrepancies
-
-### README vs Actual Code Structure
-
-The README describes a structure that does not match the actual implementation:
-
-| README Says | Actual Code |
-|-------------|-------------|
-| `terraform/` directory | `terraform-ansible/` (unified) |
-| `ansible/` directory separate | Ansible is inside `terraform-ansible/` |
-| `cd ../ansible && ansible-playbook -i inventory/hosts.ini site.yml` | Ansible runs automatically via Terraform Ansible provider |
-| `site.yml` as single entrypoint | 4 numbered playbooks: `plays/01_*.yml` ... `plays/04_*.yml` |
-
-Action needed: Update README's "Quick Start" section to reflect actual directory layout and the fact that `terraform apply` runs Ansible automatically.
-
-### Default `management_cidr` is open
-
-`variables.tf` defaults `management_cidr = "0.0.0.0/0"`, which leaves ports 22 and 9200 open to the world.
-
-Action needed: Override this before deploying. Pass `-var="management_cidr=$(curl -s ifconfig.me)/32"` or update the default.
-
 ## Prerequisites Checklist
 
 Before running any test, verify all of these:
@@ -250,8 +229,3 @@ terraform destroy \
 
 Verify in AWS Console that all EC2 instances, VPC, subnets, and security groups are removed.
 
-## What Needs to Be Fixed Before Submission
-
-1. README Quick Start: update to reflect actual `terraform-ansible/` structure and remove the manual `ansible-playbook` step.
-2. Default `management_cidr`: change from `0.0.0.0/0` to require the user to set their IP.
-3. Passwords in `defaults/main.yml`: add a comment reminding users to change before deploying.
