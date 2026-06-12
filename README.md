@@ -12,6 +12,7 @@ Automated deployment of a 3-node Elasticsearch 8.x cluster on AWS Free Tier usin
 - [Answers to Exercise Questions](#answers-to-exercise-questions)
 - [Resources Consulted](#resources-consulted)
 - [Time Spent & Feedback](#time-spent--feedback)
+- [Project Structure](#project-structure)
 
 ## Architecture Overview
 
@@ -355,8 +356,24 @@ Terraform and Ansible live together in one directory. The Terraform Ansible prov
 
 ```
 elasticsearch-aws/
+├── README.md
+├── TESTING.md                         # Compliance checklist + test commands
+│
+├── screenshot/
+│   ├── architecture.png               # Architecture diagram
+│   ├── tofu-plan.png                  # OpenTofu plan output
+│   ├── tofu-apply.png                 # OpenTofu apply output
+│   ├── elastic-api-test-1.png         # Cluster health check
+│   ├── elastic-api-test-2.png         # Node listing (_cat/nodes)
+│   ├── elastic-api-test-3.png         # Index + retrieve document test
+│   └── sory-i-take-this-after-destroy.png  # Post-destroy note
+│
 └── terraform-ansible/
-    ├── main.tf              # EC2, VPC, SG, key pair, Ansible provider resources
+    ├── ansible.tf           # Ansible provider resources (playbook runs)
+    ├── compute.tf           # EC2 instances, key pair, EBS volumes
+    ├── data.tf              # Data sources (AMI lookup, etc.)
+    ├── network.tf           # VPC, subnets, IGW, security groups
+    ├── providers.tf         # Provider declarations
     ├── variables.tf         # All configurable values (region, cluster_size, passwords)
     ├── outputs.tf           # Public IPs, ES URL, SSH command
     ├── versions.tf          # Provider version constraints
@@ -365,6 +382,7 @@ elasticsearch-aws/
     ├── requirements.yml     # Ansible collection: cloud.terraform
     │
     ├── plays/
+    │   ├── ansible.cfg                # Ansible config scoped to plays directory
     │   ├── 01_bootstrap_primary.yml   # Install ES + TLS on node-1, start cluster
     │   ├── 02_join_secondary.yml      # Install ES + TLS on nodes 2 & 3, join cluster
     │   ├── 03_configure_auth.yml      # Set passwords for built-in users
@@ -385,3 +403,20 @@ elasticsearch-aws/
             ├── elasticsearch.yml.j2   # Main ES config (cluster, security, TLS, discovery)
             └── jvm.options.j2         # JVM heap size config
 ```
+
+## Screenshots
+
+### OpenTofu Plan
+![tofu plan](screenshot/tofu-plan.png)
+
+### OpenTofu Apply
+![tofu apply](screenshot/tofu-apply.png)
+
+### Cluster Health Check
+![api test 1](screenshot/elastic-api-test-1.png)
+
+### Node Listing
+![api test 2](screenshot/elastic-api-test-2.png)
+
+### Index & Retrieve Document
+![api test 3](screenshot/elastic-api-test-3.png)
